@@ -5,16 +5,18 @@ Python скрипт для нарезки целых flac, ape, wv файлов 
 Удаляет исходный музыкальный файл.
 
 ## Необходимые пакеты
-Python 2.7
+Python 3
 
 Может запускаться в linux и в Windows 10 в bash консоли.
 
 Необходимо поставить пакеты(Ubuntu):
 
     sudo apt-get install flac
-    sudo apt-get install monkeys-audio
     sudo apt-get install wavpack
     sudo apt-get install shntool
+
+Необходим запуск команды mac для monkeys audio (формат ape),
+название пакета меняется от версии к версии искать нужно в PPA. 
 
 ## Тестирование
 
