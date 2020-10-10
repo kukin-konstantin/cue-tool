@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import argparse
 from subprocess import Popen, PIPE, STDOUT
 import os
@@ -97,6 +95,31 @@ def encode_file(root, file_name_template, in_file_format, out_file_format):
     elif out_file_format == 'flac' and in_file_format == 'wav':
         wav_to_flac(input_file, output_file, root)
 
+def encode_ape_to_flac_procedure(root, file_name, file_name_template, split_flag=True):
+    encode_file(root, file_name_template, 'ape', 'wav')
+                            
+    encode_file(root, file_name_template, 'wav', 'flac')
+    remove_file(root, file_name_template, 'wav')
+    
+    if split_flag:
+        if split_flac(root, file_name, file_name_template):
+            remove_file(root, file_name_template, 'flac')
+            remove_file(root, file_name_template, 'ape')
+    else:
+        remove_file(root, file_name_template, 'ape')
+
+def encode_wv_to_flac_procedure(root, file_name, file_name_template, split_flag=True):
+    encode_file(root, file_name_template, 'wv', 'wav')
+                            
+    encode_file(root, file_name_template, 'wav', 'flac')
+    remove_file(root, file_name_template, 'wav')
+    
+    if split_flag:
+        if split_flac(root, file_name, file_name_template):
+            remove_file(root, file_name_template, 'flac')
+            remove_file(root, file_name_template, 'wv')
+    else:
+        remove_file(root, file_name_template, 'wv')
     
 def split():
     for root, dirnames, filenames in os.walk(path):
@@ -107,40 +130,37 @@ def split():
         cue_files = filter(lambda x:  os.path.splitext(x)[1] == '.cue', filenames)
         cue_files = list(map(lambda x: os.path.join(root, x), cue_files))
         list_file_track = list(map(number_file_and_track_in_file, cue_files))
-        for index, file_name in enumerate(cue_files):
-            if list_file_track[index][0]!=list_file_track[index][1]:
-                file_name_template, name_file_play = get_file_name_template_and_play(file_name)
-                if os.path.isfile(os.path.join(root, name_file_play)):
-                    print(file_name)
-                    print(name_file_play)
-                    try:
-                        if number_of_flac>0:
-                            if split_flac(root, file_name, file_name_template):
-                                remove_file(root, file_name_template, 'flac')
-                        elif number_of_ape>0:
-                            encode_file(root, file_name_template, 'ape', 'wav')
-                            
-                            encode_file(root, file_name_template, 'wav', 'flac')
-                            remove_file(root, file_name_template, 'wav')
-                            
-                            if split_flac(root, file_name, file_name_template):
-                                remove_file(root, file_name_template, 'flac')
-                                remove_file(root, file_name_template, 'ape')
+        if len(cue_files) > 0:
+            for index, file_name in enumerate(cue_files):
+                if list_file_track[index][0]!=list_file_track[index][1]:
+                    file_name_template, name_file_play = get_file_name_template_and_play(file_name)
+                    if os.path.isfile(os.path.join(root, name_file_play)):
+                        print(file_name)
+                        print(name_file_play)
+                        try:
+                            if number_of_flac>0:
+                                if split_flac(root, file_name, file_name_template):
+                                    remove_file(root, file_name_template, 'flac')
+                            elif number_of_ape>0:
+                                encode_ape_to_flac_procedure(root, file_name, file_name_template)
+                                    
+                            elif number_of_wv>0:
+                                encode_wv_to_flac_procedure(root, file_name, file_name_template)
                                 
-                        elif number_of_wv>0:
-                            encode_file(root, file_name_template, 'wv', 'wav')
-                            
-                            encode_file(root, file_name_template, 'wav', 'flac')
-                            remove_file(root, file_name_template, 'wav')
-                        
-                            if split_flac(root, file_name, file_name_template):
-                                remove_file(root, file_name_template, 'flac')
-                                remove_file(root, file_name_template, 'wv')
-                    except Exception:
-                        t = traceback.format_exc()
-                        print(u'#### Exception: {0}'.format(t))
+                        except Exception:
+                            t = traceback.format_exc()
+                            print(u'#### Exception: {0}'.format(t))
+        elif any('.ape' == file_name[-4:] for file_name in filenames)\
+        or any('.wv' == file_name[-3:] for file_name in filenames):
+            for file_name in filenames:
+                if '.ape' in file_name[-4:]:
+                    file_name_template = file_name[:-4]
+                    encode_ape_to_flac_procedure(root, file_name, file_name_template, False)
                     
-
+                elif '.wv' in file_name[-3:]:
+                    file_name_template = file_name[:-3]
+                    encode_wv_to_flac_procedure(root, file_name, file_name_template, False)           
+                    
     
 if __name__ == '__main__':
     
